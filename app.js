@@ -1,19 +1,52 @@
 const express = require('express');
-const cors = require('cors');
-const path = require('path');  // إضافة هذا للاستفادة من مسارات الملفات
-const resultsRouter = require('./routes/results');
-require('dotenv').config();
+const multer = require('multer');
+const clamav = require('clamav.js');
+const path = require('path');
 
 const app = express();
-app.use(cors());
-app.use(express.json());
+const port = process.env.PORT || 3000;
 
-// تقديم صفحة HTML عندما يصل المستخدم إلى المسار الرئيسي "/"
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));  // تأكد من وجود index.html في مجلد public
+// إعداد multer لتحميل الملفات
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, 'uploads/'); // مجلد رفع الملفات
+  },
+  filename: function (req, file, cb) {
+    cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname)); // اسم الملف
+  }
 });
 
-app.use('/api/results', resultsRouter);  // هذا هو المسار الحالي لAPI
+const upload = multer({ storage: storage });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+// نقطة API لفحص الملف
+app.post('/api/upload', upload.single('file'), (req, res) => {
+  if (!req.file) {
+    return res.status(400).send('لم يتم رفع أي ملف');
+  }
+
+  const filePath = req.file.path;
+
+  // فحص الملف باستخدام ClamAV
+  clamav.ping(3310, 'localhost', (err) => {
+    if (err) {
+      return res.status(500).send('خطأ في الاتصال بـ ClamAV');
+    }
+
+    clamav.scan(filePath, 3310, 'localhost', (err, result) => {
+
+        return res.status(500).send('خطأ في فحص الملف');
+      }
+
+      if (result === 'OK') {
+        res.send('الملف آمن');
+      } else {
+        res.status(400).send('الملف يحتوي على فيروس');
+      }
+    });
+  });
+});
+
+// بدء السيرفر
+app.listen(port, () => {
+  console.log(`Server is running on port ${port}`);
+});
