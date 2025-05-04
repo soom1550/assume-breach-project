@@ -33,7 +33,7 @@ app.post('/api/upload', upload.single('file'), (req, res) => {
     }
 
     clamav.scan(filePath, 3310, 'localhost', (err, result) => {
-
+      if (err) {
         return res.status(500).send('خطأ في فحص الملف');
       }
 
