@@ -10,7 +10,8 @@
     "express": "^4.17.1",
     "cors": "^2.8.5",
     "dotenv": "^10.0.0",
-    "multer": "^1.4.4"
+    "multer": "^1.4.4",
+    "clamav.js": "git+https://github.com/soom1550/clamav.js.git" 
   },
   "author": "",
   "license": "ISC"
