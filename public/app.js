@@ -1,5 +1,5 @@
 document.getElementById('fetchResultsBtn').addEventListener('click', function() {
-    fetch('http://localhost:3000/api/results')
+    fetch('https://assume-breach-project.onrender.com/api/results')
         .then(response => response.json())
         .then(data => {
             document.getElementById('results').innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
